@@ -5,6 +5,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/base64"
 	"encoding/binary"
 	"encoding/json"
@@ -73,7 +74,13 @@ func dPoPGenerator(uuid_ string, method string, url_ string) { //因为有 url/u
 	data_unsigned := append(headerString, "."...)
 	data_unsigned = append(data_unsigned, payloadString...)
 
+	h := sha256.New()
+	h.Write(data_unsigned)
+	hValue := h.Sum(nil)
+
 	signature, err := private_key.Sign(rand.Reader, data_unsigned, crypto.SHA256)
+	r, s, err := ecdsa.Sign(rand.Reader, private_key, hValue)
+
 	if err != nil {
 		fmt.Println("Error at mercarigo//dPoP.go//dPoPGenerator//private_key.Sign():\n", err)
 		os.Exit(63)
