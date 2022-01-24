@@ -1,7 +1,6 @@
 package mercarigo
 
 import (
-	"crypto"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
@@ -49,7 +48,7 @@ func stringToBase64URL(target string) string {
 	return strings.TrimRight(base64.StdEncoding.EncodeToString([]byte(target)), "=")
 }
 
-func dPoPGenerator(uuid_ string, method string, url_ string) { //因为有 url/uuid 包了
+func dPoPGenerator(uuid_ string, method string, url_ string) []byte { //因为有 url和uuid 包了
 	private_key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
 		fmt.Println("Error at mercarigo//dPoP.go//dPoPGenerator//ecdsa.GenerateKey():\n", err)
@@ -78,11 +77,20 @@ func dPoPGenerator(uuid_ string, method string, url_ string) { //因为有 url/u
 	h.Write(data_unsigned)
 	hValue := h.Sum(nil)
 
-	signature, err := private_key.Sign(rand.Reader, data_unsigned, crypto.SHA256)
+	//signature, err := private_key.Sign(rand.Reader, data_unsigned, crypto.SHA256)
 	r, s, err := ecdsa.Sign(rand.Reader, private_key, hValue)
 
 	if err != nil {
-		fmt.Println("Error at mercarigo//dPoP.go//dPoPGenerator//private_key.Sign():\n", err)
+		fmt.Println("Error at mercarigo//dPoP.go//dPoPGenerator//ecdsa.Sign():\n", err)
 		os.Exit(63)
 	}
+
+	signatured := r.Bytes()
+	signatured = append(signatured, s.Bytes()...)
+
+	signaturedString := base64.StdEncoding.EncodeToString(signatured)
+
+	result := append(data_unsigned, []byte(".")...)
+	result = append(result, []byte(signaturedString)...)
+	return result
 }
