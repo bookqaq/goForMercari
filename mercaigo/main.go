@@ -33,13 +33,13 @@ type searchData struct {
 }
 
 func (data *searchData) paramGet() string {
-	return fmt.Sprintf("keyword=%s&limit=%s%page=%s&sort=%s%order=%s&status=%s",
+	return fmt.Sprintf("keyword=%s&limit=%v&page=%v&sort=%s&order=%s&status=%s",
 		data.Keyword, data.Limit, data.Page, data.Sort, data.Order, data.Status)
 }
 
 func fetch(baseURL string, data searchData) interface{} {
 	url := fmt.Sprintf("%s?%s", baseURL, data.paramGet())
-	DPOP := dPoPGenerator("goForMercaring", "GET", baseURL)
+	DPOP := dPoPGenerator("Mercari Python Bot", "GET", baseURL)
 	//header := struct {
 	//	DPoP     string `json:"DPOP"`
 	//	Platform string `json:"X-Platform"`

@@ -44,11 +44,11 @@ func intToBase64URL(target int) string {
 	return base64.StdEncoding.EncodeToString(intToByte(target))
 }
 
-func stringToBase64URL(target string) string {
-	return strings.TrimRight(base64.StdEncoding.EncodeToString([]byte(target)), "=")
+func byteToBase64URL(target []byte) string {
+	return strings.TrimRight(base64.StdEncoding.EncodeToString(target), "=")
 }
 
-func dPoPGenerator(uuid_ string, method string, url_ string) []byte { //因为有 url和uuid 包了
+func dPoPGenerator(uuid_ string, method string, url_ string) string { //因为有 url和uuid 包了
 	private_key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
 		fmt.Println("Error at mercarigo//dPoP.go//dPoPGenerator//ecdsa.GenerateKey():\n", err)
@@ -70,11 +70,12 @@ func dPoPGenerator(uuid_ string, method string, url_ string) []byte { //因为�
 		os.Exit(62)
 	}
 
-	data_unsigned := append(headerString, "."...)
-	data_unsigned = append(data_unsigned, payloadString...)
+	tmp := append(headerString, "."...)
+	tmp = append(tmp, payloadString...)
+	data_unsigned := byteToBase64URL(tmp)
 
 	h := sha256.New()
-	h.Write(data_unsigned)
+	h.Write([]byte(data_unsigned))
 	hValue := h.Sum(nil)
 
 	//signature, err := private_key.Sign(rand.Reader, data_unsigned, crypto.SHA256)
@@ -88,9 +89,8 @@ func dPoPGenerator(uuid_ string, method string, url_ string) []byte { //因为�
 	signatured := r.Bytes()
 	signatured = append(signatured, s.Bytes()...)
 
-	signaturedString := base64.StdEncoding.EncodeToString(signatured)
+	signaturedString := byteToBase64URL(signatured)
 
-	result := append(data_unsigned, []byte(".")...)
-	result = append(result, []byte(signaturedString)...)
+	result := fmt.Sprintf("%s.%s", data_unsigned, signaturedString)
 	return result
 }
