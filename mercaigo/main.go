@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 )
 
@@ -32,13 +33,19 @@ type searchData struct {
 	Status  string
 }
 
-func (data *searchData) paramGet() string {
-	return fmt.Sprintf("keyword=%s&limit=%v&page=%v&sort=%s&order=%s&status=%s",
-		data.Keyword, data.Limit, data.Page, data.Sort, data.Order, data.Status)
+func (data *searchData) paramGet() url.Values {
+	params := url.Values{}
+	params.Add("keyword", data.Keyword)
+	params.Add("limit", fmt.Sprint(data.Limit))
+	params.Add("page", fmt.Sprint(data.Page))
+	params.Add("sort", data.Sort)
+	params.Add("order", data.Order)
+	params.Add("status", data.Status)
+	return params
 }
 
 func fetch(baseURL string, data searchData) interface{} {
-	url := fmt.Sprintf("%s?%s", baseURL, data.paramGet())
+	url := fmt.Sprintf("%s?%s", baseURL, data.paramGet().Encode())
 	DPOP := dPoPGenerator("Mercari Python Bot", "GET", baseURL)
 	//header := struct {
 	//	DPoP     string `json:"DPOP"`
@@ -59,7 +66,7 @@ func fetch(baseURL string, data searchData) interface{} {
 		fmt.Printf("Error creating Request at mercaigo//main:\n%s", err)
 		os.Exit(64)
 	}
-	req.Header.Add("DPOP", string(DPOP))
+	req.Header.Add("DPOP", DPOP)
 	req.Header.Add("X-Platform", "web")
 	req.Header.Add("Accept", "*/*")
 	req.Header.Add("Accept-Encoding", "deflate, gzip")

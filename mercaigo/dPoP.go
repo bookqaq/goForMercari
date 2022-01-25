@@ -41,7 +41,7 @@ func intToByte(target int) []byte {
 }
 
 func intToBase64URL(target int) string {
-	return base64.StdEncoding.EncodeToString(intToByte(target))
+	return byteToBase64URL(intToByte(target))
 }
 
 func byteToBase64URL(target []byte) string {
