@@ -56,7 +56,7 @@ func dPoPGenerator(uuid_ string, method string, url_ string) string { //因为�
 	}
 
 	pl := payload{int(time.Now().Unix()), uuid_, url_, strings.ToUpper(method)}
-	pkjwk := pkey_jwk{"P-256", "EC", intToBase64URL(int(private_key.PublicKey.X.Int64())), intToBase64URL(int(private_key.PublicKey.Y.Int64()))}
+	pkjwk := pkey_jwk{"P-256", "EC", byteToBase64URL(private_key.PublicKey.X.Bytes()), byteToBase64URL(private_key.Y.Bytes())}
 	pkh := pkey_header{"dpop+jwt", "ES256", pkjwk}
 
 	headerString, err := json.Marshal(pkh)
