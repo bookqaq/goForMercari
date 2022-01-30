@@ -70,9 +70,11 @@ func dPoPGenerator(uuid_ string, method string, url_ string) string { //因为�
 		os.Exit(62)
 	}
 
+	headerString = []byte(byteToBase64URL(headerString))
+	payloadString = []byte(byteToBase64URL(payloadString))
+
 	tmp := append(headerString, "."...)
-	tmp = append(tmp, payloadString...)
-	data_unsigned := byteToBase64URL(tmp)
+	data_unsigned := append(tmp, payloadString...)
 
 	h := sha256.New()
 	h.Write([]byte(data_unsigned))
