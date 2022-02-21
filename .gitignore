@@ -1,2 +1,2 @@
-mercarigo/executor/*
+mercarigo/executor/**
 *_test.go
