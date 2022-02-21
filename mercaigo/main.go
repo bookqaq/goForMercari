@@ -1,11 +1,13 @@
 package mercarigo
 
 import (
+	"crypto/tls"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"os"
+	"time"
 )
 
 const (
@@ -44,9 +46,13 @@ func (data *searchData) paramGet() url.Values {
 	return params
 }
 
-func fetch(baseURL string, data searchData) interface{} {
-	url := fmt.Sprintf("%s?%s", baseURL, data.paramGet().Encode())
-	DPOP := dPoPGenerator("Mercari Python Bot", "GET", baseURL)
+func fetch(baseURL string, data searchData) string {
+	url_ := fmt.Sprintf("%s?%s", baseURL, data.paramGet().Encode())
+	DPOP := string(exec_func("core", ""))
+	if DPOP == FAIL_MSG {
+		fmt.Printf("Error generating dPoP at mercarigo/fetch")
+		os.Exit(67)
+	}
 	//header := struct {
 	//	DPoP     string `json:"DPOP"`
 	//	Platform string `json:"X-Platform"`
@@ -59,9 +65,22 @@ func fetch(baseURL string, data searchData) interface{} {
 	//	Encoding: "deflate, gzip",
 	//}
 
-	client := &http.Client{}
+	proxyUrl := "http://127.0.0.1:12355"
 
-	req, err := http.NewRequest("GET", url, nil)
+	proxy, _ := url.Parse(proxyUrl)
+	tr := &http.Transport{
+		Proxy:           http.ProxyURL(proxy),
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+
+	client := &http.Client{
+		Transport: tr,
+		Timeout:   time.Second * 5,
+	}
+
+	//client := &http.Client{}
+
+	req, err := http.NewRequest("GET", url_, nil)
 	if err != nil {
 		fmt.Printf("Error creating Request at mercaigo//main:\n%s", err)
 		os.Exit(64)
@@ -80,18 +99,10 @@ func fetch(baseURL string, data searchData) interface{} {
 
 	fmt.Println(resp.Status)
 
-	res := make([]byte, 0)
-	buf := make([]byte, 1024)
-	for {
-		n, err := resp.Body.Read(buf)
-		if err != nil && err != io.EOF {
-			fmt.Printf("Error reading data from website at mercaigo//main:\n%s", err)
-			os.Exit(66)
-		}
-		if n == 0 {
-			break
-		}
-		res = append(res, buf...)
+	res, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Printf("Error fetching page at main:\n%s", err)
+		os.Exit(66)
 	}
-	return res
+	return string(res)
 }

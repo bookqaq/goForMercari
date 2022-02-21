@@ -15,7 +15,7 @@ import (
 )
 
 type payload struct {
-	Iat int    `json:"iat"`
+	Iat int64  `json:"iat"`
 	Jti string `json:"jti"`
 	Htu string `json:"htu"`
 	Htm string `json:"htm"`
@@ -55,8 +55,8 @@ func dPoPGenerator(uuid_ string, method string, url_ string) string { //因为�
 		os.Exit(60)
 	}
 
-	pl := payload{int(time.Now().Unix()), uuid_, url_, strings.ToUpper(method)}
-	pkjwk := pkey_jwk{"P-256", "EC", byteToBase64URL(private_key.PublicKey.X.Bytes()), byteToBase64URL(private_key.Y.Bytes())}
+	pl := payload{time.Now().Unix(), uuid_, url_, strings.ToUpper(method)}
+	pkjwk := pkey_jwk{"P-256", "EC", byteToBase64URL(private_key.PublicKey.X.Bytes()), byteToBase64URL(private_key.PublicKey.Y.Bytes())}
 	pkh := pkey_header{"dpop+jwt", "ES256", pkjwk}
 
 	headerString, err := json.Marshal(pkh)
@@ -70,22 +70,23 @@ func dPoPGenerator(uuid_ string, method string, url_ string) string { //因为�
 		os.Exit(62)
 	}
 
-	headerString = []byte(byteToBase64URL(headerString))
-	payloadString = []byte(byteToBase64URL(payloadString))
-
-	tmp := append(headerString, "."...)
-	data_unsigned := append(tmp, payloadString...)
+	data_unsigned := fmt.Sprintf("%s.%s", byteToBase64URL(headerString), byteToBase64URL(payloadString))
 
 	h := sha256.New()
 	h.Write([]byte(data_unsigned))
 	hValue := h.Sum(nil)
 
-	//signature, err := private_key.Sign(rand.Reader, data_unsigned, crypto.SHA256)
+	//signature, err := private_key.Sign(rand.Reader, []byte(data_unsigned), crypto.SHA256)
 	r, s, err := ecdsa.Sign(rand.Reader, private_key, hValue)
 
 	if err != nil {
 		fmt.Println("Error at mercarigo//dPoP.go//dPoPGenerator//ecdsa.Sign():\n", err)
 		os.Exit(63)
+	}
+
+	if !ecdsa.Verify(&private_key.PublicKey, hValue, r, s) {
+		fmt.Println("Verify fail.")
+		os.Exit(2)
 	}
 
 	signatured := r.Bytes()
