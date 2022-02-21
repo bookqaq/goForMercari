@@ -1,4 +1,7 @@
-goForMercaing
+# goForMercaing
 
 WIP.
-Still having DPoP issue(401).
+
+Now dealing with results.
+
+dPoP issue solved by compiling python interpretation.
