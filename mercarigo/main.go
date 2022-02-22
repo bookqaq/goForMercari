@@ -1,7 +1,9 @@
 package mercarigo
 
 import (
+	"compress/gzip"
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -16,14 +18,35 @@ const (
 	searchURL      = rootURL + "search_index/search"
 )
 
-type mercariItem struct {
-	ProductId   string
-	ProductURL  string
-	ImageURL    string
-	ProductName string
-	Price       string
-	Status      string
-	IsSoldOut   bool
+type ResultData struct {
+	Meta ResultMetaData `json:"meta"`
+	Data []MercariItem  `json:"data"`
+}
+
+type ResultMetaData struct {
+	HasNext  bool   `json:"has_next"`
+	NextPage int    `json:"next_page"`
+	Sort     string `json:"sort"`
+	Order    string `json:"order"`
+}
+
+type MercariItem struct {
+	ProductId   string       `json:"id"`
+	ProductName string       `json:"name"`
+	Price       int          `json:"price"`
+	Created     int64        `json:"created"`
+	Updated     int64        `json:"updated"`
+	Condition   Name_Id_Unit `json:"item_condition"`
+	ImageURL    []string     `json:"thumbnails"`
+	Status      string       `json:"status"` // on_sale / trading / sold_out
+	Seller      Name_Id_Unit `json:"seller"`
+	Buyer       Name_Id_Unit `json:"buyer"`
+	Shipping    Name_Id_Unit `json:"shipping_from_area"`
+}
+
+type Name_Id_Unit struct {
+	Id   int64  `json:"id"`
+	Name string `json:"name"`
 }
 
 type searchData struct {
@@ -33,6 +56,10 @@ type searchData struct {
 	Sort    string
 	Order   string
 	Status  string
+}
+
+func (item *MercariItem) GetProductURL() string {
+	return rootProductURL + item.ProductId
 }
 
 func (data *searchData) paramGet() url.Values {
@@ -46,9 +73,9 @@ func (data *searchData) paramGet() url.Values {
 	return params
 }
 
-func fetch(baseURL string, data searchData) string {
+func fetch(baseURL string, data searchData) ResultData {
 	url_ := fmt.Sprintf("%s?%s", baseURL, data.paramGet().Encode())
-	DPOP := string(exec_func("core", ""))
+	DPOP := string(exec_func("core.exe", ""))
 	if DPOP == FAIL_MSG {
 		fmt.Printf("Error generating dPoP at mercarigo/fetch")
 		os.Exit(67)
@@ -82,7 +109,7 @@ func fetch(baseURL string, data searchData) string {
 
 	req, err := http.NewRequest("GET", url_, nil)
 	if err != nil {
-		fmt.Printf("Error creating Request at mercaigo//main:\n%s", err)
+		fmt.Printf("Error creating Request at main:\n%s", err)
 		os.Exit(64)
 	}
 	req.Header.Add("DPOP", DPOP)
@@ -97,12 +124,59 @@ func fetch(baseURL string, data searchData) string {
 	}
 	defer resp.Body.Close()
 
-	fmt.Println(resp.Status)
+	//fmt.Println(resp.Status)
 
-	res, err := io.ReadAll(resp.Body)
+	//result, err := io.ReadAll(resp.Body)
+	//if err != nil {
+	//	fmt.Printf("Decode fail at main:\n%s", err)
+	//	os.Exit(68)
+	//}
+
+	gzReader, err := gzip.NewReader(resp.Body)
 	if err != nil {
-		fmt.Printf("Error fetching page at main:\n%s", err)
+		fmt.Printf("Creating gzip reader fail at main:\n%s", err)
 		os.Exit(66)
 	}
-	return string(res)
+
+	result, err := io.ReadAll(gzReader)
+	if err != nil {
+		fmt.Printf("Decode fail at main:\n%s", err)
+		os.Exit(67)
+	}
+
+	var content ResultData
+	err = json.Unmarshal(result, &content)
+	if err != nil {
+		fmt.Printf("Json parse fail at main:\n%s", err)
+		os.Exit(68)
+	}
+
+	return content
+}
+
+func Mercari_search(name string, sort string, order string, status string, limit int, times int) []MercariItem {
+	search := searchData{
+		Keyword: name,
+		Limit:   limit,
+		Sort:    sort,
+		Page:    0,
+		Order:   order,
+		Status:  status,
+	}
+
+	results := make([]MercariItem, 0)
+
+	for search.Page < times {
+		items := fetch(searchURL, search)
+		if len(items.Data) <= 0 {
+			break
+		}
+		results = append(results, items.Data...)
+		if !items.Meta.HasNext {
+			break
+		}
+		search.Page += 1
+	}
+
+	return results
 }
