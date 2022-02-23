@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	EXEC_PATH = "C:\\Users\\bookq\\Desktop\\WorkSpace\\Go\\goForMercari\\mercarigo\\executor\\"
+	EXEC_PATH = "path/to/your/dPoP/generator/executable"
 	FAIL_MSG  = "Run Failed."
 )
 

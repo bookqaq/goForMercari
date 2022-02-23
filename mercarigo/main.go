@@ -4,11 +4,11 @@ import (
 	"compress/gzip"
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
-	"os"
 	"time"
 )
 
@@ -73,27 +73,15 @@ func (data *searchData) paramGet() url.Values {
 	return params
 }
 
-func fetch(baseURL string, data searchData) ResultData {
+func fetch(baseURL string, data searchData) (ResultData, error) {
 	url_ := fmt.Sprintf("%s?%s", baseURL, data.paramGet().Encode())
 	DPOP := string(exec_func("core.exe", ""))
 	if DPOP == FAIL_MSG {
-		fmt.Printf("Error generating dPoP at mercarigo/fetch")
-		os.Exit(67)
+		err := errors.New("error generating dPoP at fetch")
+		return ResultData{}, err
 	}
-	//header := struct {
-	//	DPoP     string `json:"DPOP"`
-	//	Platform string `json:"X-Platform"`
-	//	Accept   string `json:"Accept"`
-	//	Encoding string `json:"Accept-Encoding"`
-	//}{
-	//	DPoP:     string(DPOP),
-	//	Platform: "web",
-	//	Accept:   "*/*",
-	//	Encoding: "deflate, gzip",
-	//}
 
 	proxyUrl := "http://127.0.0.1:12355"
-
 	proxy, _ := url.Parse(proxyUrl)
 	tr := &http.Transport{
 		Proxy:           http.ProxyURL(proxy),
@@ -109,8 +97,8 @@ func fetch(baseURL string, data searchData) ResultData {
 
 	req, err := http.NewRequest("GET", url_, nil)
 	if err != nil {
-		fmt.Printf("Error creating Request at main:\n%s", err)
-		os.Exit(64)
+		err = fmt.Errorf("error creating Request at fetch:\n%s", err)
+		return ResultData{}, err
 	}
 	req.Header.Add("DPOP", DPOP)
 	req.Header.Add("X-Platform", "web")
@@ -119,8 +107,8 @@ func fetch(baseURL string, data searchData) ResultData {
 
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Printf("Error accessing page at main:\n%s", err)
-		os.Exit(65)
+		err = fmt.Errorf("error accessing page at fetch:\n%s", err)
+		return ResultData{}, err
 	}
 	defer resp.Body.Close()
 
@@ -134,27 +122,27 @@ func fetch(baseURL string, data searchData) ResultData {
 
 	gzReader, err := gzip.NewReader(resp.Body)
 	if err != nil {
-		fmt.Printf("Creating gzip reader fail at main:\n%s", err)
-		os.Exit(66)
+		err = fmt.Errorf("creating gzip reader fail at fetch:\n%s", err)
+		return ResultData{}, err
 	}
 
 	result, err := io.ReadAll(gzReader)
 	if err != nil {
-		fmt.Printf("Decode fail at main:\n%s", err)
-		os.Exit(67)
+		err = fmt.Errorf("decode fail at fetch:\n%s", err)
+		return ResultData{}, err
 	}
 
 	var content ResultData
 	err = json.Unmarshal(result, &content)
 	if err != nil {
-		fmt.Printf("Json parse fail at main:\n%s", err)
-		os.Exit(68)
+		err = fmt.Errorf("json parse fail at fetch:\n%s", err)
+		return ResultData{}, err
 	}
 
-	return content
+	return content, nil
 }
 
-func Mercari_search(name string, sort string, order string, status string, limit int, times int) []MercariItem {
+func Mercari_search(name string, sort string, order string, status string, limit int, times int) ([]MercariItem, error) {
 	search := searchData{
 		Keyword: name,
 		Limit:   limit,
@@ -167,7 +155,10 @@ func Mercari_search(name string, sort string, order string, status string, limit
 	results := make([]MercariItem, 0)
 
 	for search.Page < times {
-		items := fetch(searchURL, search)
+		items, err := fetch(searchURL, search)
+		if err != nil {
+			return nil, err
+		}
 		if len(items.Data) <= 0 {
 			break
 		}
@@ -178,5 +169,5 @@ func Mercari_search(name string, sort string, order string, status string, limit
 		search.Page += 1
 	}
 
-	return results
+	return results, nil
 }
