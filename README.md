@@ -6,12 +6,12 @@ Usage:
 mercarigo.Mercari_search(name string, sort string, order string, status string, limit int, times int) ([]MercariItem, error)  
 
 Parameter:  
-name   : item to search.  
-sort   : there would be other options, but created time is enough.  
-order  : using desc to get latest info, which is enough.  
-status : item status ( on_sale / trading / sold_out / leave empty string )  
-limit  : items limit on one page, collaborate with times to control total item count.  
-times  : maximum page count when searching, collbrate with limit to control total item count.  
+- name   : item to search.  
+- sort   : there would be other options, but created time is enough.  
+- order  : using desc to get latest info, which is enough.  
+- status : item status ( on_sale / trading / sold_out / leave empty string )  
+- limit  : items limit on one page, collaborate with times to control total item count.  
+- times  : maximum page count when searching, collbrate with limit to control total item count.  
 
 Return :  
 []MercariItem  
