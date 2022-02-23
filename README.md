@@ -21,12 +21,12 @@ Return :
 - Created     : unix time about create time.  
 - Updated     : unix time about item update.  
 - Condition   : a Name_Id_Unit, parameter id refers to item condition  
-             - |- 1 : 新品、未使用  
-             - |- 2 : 未使用に近い  
-             - |- 3 : 目立った傷や汚れなし  
-             - |- 4 : やや傷や汚れあり  
-             - |- 5 : 傷や汚れあり  
-             - |- 6 : 全体的に状態が悪い  
+                |- 1 : 新品、未使用  
+                |- 2 : 未使用に近い  
+                |- 3 : 目立った傷や汚れなし  
+                |- 4 : やや傷や汚れあり  
+                |- 5 : 傷や汚れあり  
+                |- 6 : 全体的に状態が悪い  
 - ImageURL    : first picture of item from mercdn  
 - Status      : info about item selling status( on_sale / trading / sold_out )  
 - Seller      : a Name_Id_Unit, parameter id is seller's id  
