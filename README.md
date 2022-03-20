@@ -24,7 +24,7 @@
 | Price       | a int number, price in yen.|  
 | Created     | unix time about create time.  |
 | Updated     | unix time about item update.  |
-| Condition[[*](#condition)]| a `Name_Id_Unit`, parameter id refers to item condition  |
+| Condition[[*](#Condition explained in japanese)]| a `Name_Id_Unit`, parameter id refers to item condition  |
 | ImageURL    | first picture of item from mercdn  |
 | Status      | info about item selling status( on_sale / trading / sold_out )  |
 | Seller      | a `Name_Id_Unit`, parameter id is seller's id  |
