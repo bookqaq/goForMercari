@@ -24,19 +24,21 @@
 | Price       | a int number, price in yen.|  
 | Created     | unix time about create time.  |
 | Updated     | unix time about item update.  |
-| Condition[*]| a `Name_Id_Unit`, parameter id refers to item condition  |
+| Condition[[*](#condition)]| a `Name_Id_Unit`, parameter id refers to item condition  |
 | ImageURL    | first picture of item from mercdn  |
 | Status      | info about item selling status( on_sale / trading / sold_out )  |
 | Seller      | a `Name_Id_Unit`, parameter id is seller's id  |
 | Buyer       | a `Name_Id_Unit`, similar to seller, only appear when item is not on sale.  |
 | Shipping    | a `Name_Id_Unit`, id represents place shipping from, name is filled with usable string.  |
 
-#### Condition
-    |- 1 : 新品、未使用  
-    |- 2 : 未使用に近い  
-    |- 3 : 目立った傷や汚れなし  
-    |- 4 : やや傷や汚れあり  
-    |- 5 : 傷や汚れあり  
-    |- 6 : 全体的に状態が悪い  
+#### Condition explained in japanese
+|Condition | Description|
+|--- | ---|
+|1 | 新品、未使用 | 
+|2 | 未使用に近い |
+|3 | 目立った傷や汚れなし  |
+|4 | やや傷や汚れあり  |
+|5 | 傷や汚れあり  |
+|6 | 全体的に状態が悪い  |
 
 error : errors during searching, including getting dPoP, sending and receiving http request, gzip decompression, json parse and more.  
