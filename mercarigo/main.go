@@ -2,13 +2,11 @@ package mercarigo
 
 import (
 	"compress/gzip"
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
-	"time"
 
 	"github.com/google/uuid"
 )
@@ -79,19 +77,18 @@ func fetch(baseURL string, data searchData) (ResultData, error) {
 
 	DPOP := dPoPGenerator(uuid.NewString(), "get", searchURL)
 
-	proxyUrl := "http://127.0.0.1:12355"
-	proxy, _ := url.Parse(proxyUrl)
-	tr := &http.Transport{
-		Proxy:           http.ProxyURL(proxy),
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	}
+	//proxyUrl := "http://127.0.0.1:12355"
+	//proxy, _ := url.Parse(proxyUrl)
+	//tr := &http.Transport{
+	//	Proxy:           http.ProxyURL(proxy),
+	//	TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	//}
+	//client := &http.Client{
+	//	Transport: tr,
+	//	Timeout:   time.Second * 5,
+	//}
 
-	client := &http.Client{
-		Transport: tr,
-		Timeout:   time.Second * 5,
-	}
-
-	//client := &http.Client{}
+	client := &http.Client{}
 
 	req, err := http.NewRequest("GET", url_, nil)
 	if err != nil {
