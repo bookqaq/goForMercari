@@ -4,12 +4,13 @@ import (
 	"compress/gzip"
 	"crypto/tls"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 const (
@@ -75,11 +76,8 @@ func (data *searchData) paramGet() url.Values {
 
 func fetch(baseURL string, data searchData) (ResultData, error) {
 	url_ := fmt.Sprintf("%s?%s", baseURL, data.paramGet().Encode())
-	DPOP := string(exec_func("core.exe", ""))
-	if DPOP == FAIL_MSG {
-		err := errors.New("error generating dPoP at fetch")
-		return ResultData{}, err
-	}
+
+	DPOP := dPoPGenerator(uuid.NewString(), "get", searchURL)
 
 	proxyUrl := "http://127.0.0.1:12355"
 	proxy, _ := url.Parse(proxyUrl)
@@ -113,12 +111,6 @@ func fetch(baseURL string, data searchData) (ResultData, error) {
 	defer resp.Body.Close()
 
 	//fmt.Println(resp.Status)
-
-	//result, err := io.ReadAll(resp.Body)
-	//if err != nil {
-	//	fmt.Printf("Decode fail at main:\n%s", err)
-	//	os.Exit(68)
-	//}
 
 	gzReader, err := gzip.NewReader(resp.Body)
 	if err != nil {

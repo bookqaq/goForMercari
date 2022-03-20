@@ -5,14 +5,19 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/sha256"
+	"encoding/asn1"
 	"encoding/base64"
-	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"math/big"
 	"os"
 	"strings"
 	"time"
 )
+
+type ECDSASignature struct {
+	R, S *big.Int
+}
 
 type payload struct {
 	Iat int64  `json:"iat"`
@@ -34,18 +39,8 @@ type pkey_header struct {
 	Jwk pkey_jwk `json:"jwk"`
 }
 
-func intToByte(target int) []byte {
-	result := make([]byte, 8)
-	binary.BigEndian.PutUint64(result, uint64(target))
-	return result
-}
-
-func intToBase64URL(target int) string {
-	return byteToBase64URL(intToByte(target))
-}
-
 func byteToBase64URL(target []byte) string {
-	return strings.TrimRight(base64.StdEncoding.EncodeToString(target), "=")
+	return base64.RawURLEncoding.EncodeToString(target)
 }
 
 func dPoPGenerator(uuid_ string, method string, url_ string) string { //因为有 url和uuid 包了
@@ -72,25 +67,20 @@ func dPoPGenerator(uuid_ string, method string, url_ string) string { //因为�
 
 	data_unsigned := fmt.Sprintf("%s.%s", byteToBase64URL(headerString), byteToBase64URL(payloadString))
 
-	h := sha256.New()
-	h.Write([]byte(data_unsigned))
-	hValue := h.Sum(nil)
+	hval := sha256.Sum256([]byte(data_unsigned))
 
-	//signature, err := private_key.Sign(rand.Reader, []byte(data_unsigned), crypto.SHA256)
-	r, s, err := ecdsa.Sign(rand.Reader, private_key, hValue)
-
+	signature, err := ecdsa.SignASN1(rand.Reader, private_key, hval[:])
 	if err != nil {
-		fmt.Println("Error at mercarigo//dPoP.go//dPoPGenerator//ecdsa.Sign():\n", err)
+		fmt.Println(err)
 		os.Exit(63)
 	}
-
-	if !ecdsa.Verify(&private_key.PublicKey, hValue, r, s) {
-		fmt.Println("Verify fail.")
-		os.Exit(2)
+	sig := &ECDSASignature{}
+	if _, err := asn1.Unmarshal(signature, sig); err != nil {
+		fmt.Println(err)
+		os.Exit(64)
 	}
 
-	signatured := r.Bytes()
-	signatured = append(signatured, s.Bytes()...)
+	signatured := append(sig.R.Bytes(), sig.S.Bytes()...)
 
 	signaturedString := byteToBase64URL(signatured)
 
