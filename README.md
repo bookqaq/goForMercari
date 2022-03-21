@@ -1,4 +1,4 @@
-# goForMercaing
+# goForMercai
 
  A mercari V1 API wrapper rewritten in golang(same as [marvinody/mercari](https://github.com/marvinody/mercari))
 
