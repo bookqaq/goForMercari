@@ -2,7 +2,7 @@
 
  Please turn to use [mer-wrapper](https://github.com/bookqaq/mer-wrapper) to use custom *http.Client.
  
- There will be no maintenance 
+ Repo will be archived and no maintenance will be provided.
 
  A mercari V1 API wrapper rewritten in golang(same as [marvinody/mercari](https://github.com/marvinody/mercari))
 
